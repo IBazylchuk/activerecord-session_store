@@ -10,8 +10,6 @@ module ActiveRecord
     autoload :Session, 'active_record/session_store/session'
     autoload :BotSession, 'active_record/session_store/bot_session'
 
-    mattr_accessor :enable_bot_sessions
-
     module ClassMethods # :nodoc:
 
       def serialize(data)

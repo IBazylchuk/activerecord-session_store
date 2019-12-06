@@ -58,6 +58,7 @@ module ActionDispatch
       # ActiveRecord::SessionStore::Session
       cattr_accessor :session_class
       cattr_accessor :bot_session_class
+      cattr_accessor :enable_bot_sessions
 
       SESSION_RECORD_KEY = 'rack.session.record'
       if Rack.const_defined?(:RACK_SESSION_OPTIONS)
@@ -68,7 +69,7 @@ module ActionDispatch
 
     private
       def chose_session_class(request)
-        if ActiveRecord::SessionStore.enable_bot_sessions
+        if ActiveRecord::SessionStore::ActiveRecordStore.enable_bot_sessions
           browser = Browser.new(request.env['HTTP_USER_AGENT'], accept_language: "en-us")
           if browser.bot?
             @@bot_session_class
