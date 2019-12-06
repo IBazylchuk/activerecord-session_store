@@ -13,7 +13,6 @@ module ActiveRecord
     mattr_accessor :enable_bot_sessions
 
     module ClassMethods # :nodoc:
-      mattr_accessor :serializer
 
       def serialize(data)
         serializer_class.dump(data) if data

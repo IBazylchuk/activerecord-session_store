@@ -69,7 +69,7 @@ module ActionDispatch
     private
       def chose_session_class(request)
         if ActiveRecord::SessionStore.enable_bot_sessions
-          browser = Browser.new(request.user_agent, accept_language: request.accept_language)
+          browser = Browser.new(request.env['HTTP_USER_AGENT'], accept_language: "en-us")
           if browser.bot?
             @@bot_session_class
           else
