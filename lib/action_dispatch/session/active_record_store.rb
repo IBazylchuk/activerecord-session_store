@@ -1,5 +1,6 @@
 require "active_support/core_ext/module/attribute_accessors"
 require 'action_dispatch/middleware/session/abstract_store'
+require 'browser'
 
 module ActionDispatch
   module Session
@@ -56,6 +57,7 @@ module ActionDispatch
       # The class used for session storage. Defaults to
       # ActiveRecord::SessionStore::Session
       cattr_accessor :session_class
+      cattr_accessor :bot_session_class
 
       SESSION_RECORD_KEY = 'rack.session.record'
       if Rack.const_defined?(:RACK_SESSION_OPTIONS)
@@ -65,13 +67,26 @@ module ActionDispatch
       end
 
     private
+      def chose_session_class(request)
+        if ActiveRecord::SessionStore.enable_bot_sessions
+          browser = Browser.new(request.user_agent, accept_language: request.accept_language)
+          if browser.bot?
+            @@bot_session_class
+          else
+            @@session_class
+          end
+        else
+          @@session_class
+        end
+      end
+
       def get_session(request, sid)
         logger.silence_logger do
-          unless sid and session = @@session_class.find_by_session_id(sid)
+          unless sid and session = chose_session_class(request).find_by_session_id(sid)
             # If the sid was nil or if there is no pre-existing session under the sid,
             # force the generation of a new sid and associate a new session associated with the new sid
             sid = generate_sid
-            session = @@session_class.new(:session_id => sid, :data => {})
+            session = chose_session_class(request).new(:session_id => sid, :data => {})
           end
           request.env[SESSION_RECORD_KEY] = session
           [sid, session.data]
@@ -98,7 +113,7 @@ module ActionDispatch
       def delete_session(request, session_id, options)
         logger.silence_logger do
           if sid = current_session_id(request)
-            if model = @@session_class.find_by_session_id(sid)
+            if model = chose_session_class(request).find_by_session_id(sid)
               data = model.data
               model.destroy
             end
@@ -110,7 +125,7 @@ module ActionDispatch
             new_sid = generate_sid
 
             if options[:renew]
-              new_model = @@session_class.new(:session_id => new_sid, :data => data)
+              new_model = chose_session_class(request).new(:session_id => new_sid, :data => data)
               new_model.save
               request.env[SESSION_RECORD_KEY] = new_model
             end
@@ -121,10 +136,10 @@ module ActionDispatch
 
       def get_session_model(request, id)
         logger.silence_logger do
-          model = @@session_class.find_by_session_id(id)
+          model = chose_session_class(request).find_by_session_id(id)
           if !model
             id = generate_sid
-            model = @@session_class.new(:session_id => id, :data => {})
+            model = chose_session_class(request).new(:session_id => id, :data => {})
             model.save
           end
           if request.env[ENV_SESSION_OPTIONS_KEY][:id].nil?

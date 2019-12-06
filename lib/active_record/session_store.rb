@@ -8,6 +8,9 @@ require 'multi_json'
 module ActiveRecord
   module SessionStore
     autoload :Session, 'active_record/session_store/session'
+    autoload :BotSession, 'active_record/session_store/bot_session'
+
+    mattr_accessor :enable_bot_sessions
 
     module ClassMethods # :nodoc:
       mattr_accessor :serializer
@@ -113,6 +116,7 @@ end
 
 ActiveSupport.on_load(:active_record) do
   require 'active_record/session_store/session'
+  require 'active_record/session_store/bot_session'
 end
 
 require 'active_record/session_store/sql_bypass'

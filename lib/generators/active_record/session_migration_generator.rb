@@ -20,6 +20,14 @@ module ActiveRecord
           current_table_name
         end
 
+        def bot_session_table_name
+          bot_current_table_name = ActiveRecord::SessionStore::BotSession.table_name
+          if bot_current_table_name == 'bot_session' || bot_current_table_name == 'bot_sessions'
+            bot_current_table_name = ActiveRecord::Base.pluralize_table_names ? 'bot_sessions' : 'bot_session'
+          end
+          bot_current_table_name
+        end
+
         def migration_version
           "[#{ActiveRecord::Migration.current_version}]" if ActiveRecord::Migration.respond_to?(:current_version)
         end

@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.add_dependency('railties', '>= 4.0')
   s.add_dependency('rack', '>= 1.5.2', '< 3')
   s.add_dependency('multi_json', '~> 1.11', '>= 1.11.2')
+  s.add_dependency('browser')
 
   s.add_development_dependency('sqlite3')
 end
