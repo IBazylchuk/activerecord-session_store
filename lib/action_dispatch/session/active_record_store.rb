@@ -61,11 +61,7 @@ module ActionDispatch
       cattr_accessor :enable_bot_sessions
 
       SESSION_RECORD_KEY = 'rack.session.record'
-      if Rack.const_defined?(:RACK_SESSION_OPTIONS)
-        ENV_SESSION_OPTIONS_KEY = Rack::RACK_SESSION_OPTIONS
-      else
-        ENV_SESSION_OPTIONS_KEY = Rack::Session::Abstract::ENV_SESSION_OPTIONS_KEY
-      end
+      ENV_SESSION_OPTIONS_KEY = Rack::RACK_SESSION_OPTIONS
 
     private
       def chose_session_class(request)
@@ -82,7 +78,7 @@ module ActionDispatch
       end
 
       def get_session(request, sid)
-        logger.silence_logger do
+        logger.silence do
           unless sid and session = chose_session_class(request).find_by_session_id(sid)
             # If the sid was nil or if there is no pre-existing session under the sid,
             # force the generation of a new sid and associate a new session associated with the new sid
@@ -95,7 +91,7 @@ module ActionDispatch
       end
 
       def write_session(request, sid, session_data, options)
-        logger.silence_logger do
+        logger.silence do
           record = get_session_model(request, sid)
           record.data = session_data
           return false unless record.save
@@ -112,7 +108,7 @@ module ActionDispatch
       end
 
       def delete_session(request, session_id, options)
-        logger.silence_logger do
+        logger.silence do
           if sid = current_session_id(request)
             if model = chose_session_class(request).find_by_session_id(sid)
               data = model.data
@@ -136,7 +132,7 @@ module ActionDispatch
       end
 
       def get_session_model(request, id)
-        logger.silence_logger do
+        logger.silence do
           model = chose_session_class(request).find_by_session_id(id)
           if !model
             id = generate_sid
@@ -157,14 +153,15 @@ module ActionDispatch
         [model.session_id, model.data]
       end
 
+      module NilLogger
+        def self.silence
+          yield
+        end
+      end
+
       def logger
-        ActiveRecord::Base.logger || ActiveRecord::SessionStore::NilLogger
+        ActiveRecord::Base.logger || NilLogger
       end
     end
   end
-end
-
-if ActiveRecord::VERSION::MAJOR == 4
-  require 'action_dispatch/session/legacy_support'
-  ActionDispatch::Session::ActiveRecordStore.send(:include, ActionDispatch::Session::LegacySupport)
 end

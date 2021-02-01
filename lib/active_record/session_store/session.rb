@@ -8,7 +8,7 @@ module ActiveRecord
     class Session < ActiveRecord::Base
       extend ClassMethods
       SEMAPHORE = Mutex.new
-
+      
       include ActiveRecord::SessionStore::SessionRecord::BaseSessionConcern
     end
   end
